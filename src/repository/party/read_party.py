@@ -1,25 +1,26 @@
-from fastapi import APIRouter
-from api.v1 import read
-from repository.party.party import PartyModel
-from response import Response
+import json
+from fastapi import APIRouter, HTTPException
+from src.api.v1.read import read
+from src.repository.party.party import Party
 
 router = APIRouter()
 
-@router.get("/read-party", response_model=Response)
-async def read_party(party_id: str) -> Response:
+
+@router.get("/read-party/party_id={party_id}")
+def read_party(party_id: str):
     try:
-        response = await read("party", party_id)
-        data = response.data[0] if response.data else None
-        if not data:
-            return Response(False, "파티 읽기에 실패했습니다.").to_dict()
+        response = read("PARTY", party_id).model_dump_json()
+        response = json.loads(response)
         
-        party_data = PartyModel(
-            created_at=data['created_at'],
-            name=data['name'],
-            date_list=data['date_list'],
-            id=data['id']
-        ).to_dict()
-        
-        return Response(True, "파티 읽기에 성공했습니다.", party_data).to_dict()
+        data = response["data"]
+
+        party_data = Party(
+            id=str(data["id"]),
+            created_at=data["created_at"],
+            name=data["name"],
+            date_list=data["date_list"],
+        )
+
+        return party_data
     except Exception as e:
-        return Response(False, "파티 읽기에 실패했습니다.", str(e)).to_dict()
+        raise HTTPException(status_code=400, detail=f"파티 읽기에 실패했습니다. {str(e)}")

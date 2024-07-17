@@ -8,5 +8,3 @@ url = os.getenv("SUPABASE_DB_URL")
 key = os.getenv("SUPABASE_API_KEY")
 
 db: Client = create_client(url, key)
-
-party_table = "PARTY"

@@ -1,10 +1,10 @@
-from src.service.supabase import db
-from src.response import Response
+from fastapi import HTTPException
+from src.service.supabase.db import db
 
 
-async def delete(table_name: str, id: int) -> Response:
+def delete(table_name: str, id: int):
     try:
-        await (db.table(table_name).delete().eq("id", id).execute())
-        return Response(True, "DB에 정보를 삭제하는데 성공했습니다.").to_dict()
+        db.table(table_name).delete().eq("id", id).execute()
+        return {"success": True, "message": "데이터 삭제에 성공했습니다."}
     except Exception as e:
-        return Response(False, "DB에 정보를 삭제하는데 실패했습니다.").to_dict()
+        raise HTTPException(status_code=400, detail=str(e))

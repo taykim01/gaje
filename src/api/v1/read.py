@@ -1,9 +1,11 @@
-from src.service.supabase import db
+from fastapi import HTTPException
+from src.service.supabase.db import db
 from src.response import Response
 
-async def read(table_name: str, id: int) -> Response:
+
+def read(table_name: str, id: int) -> Response:
     try:
-        response = await db.table(table_name).select("*").eq("id", id).single()
-        return Response(True, "DB에 정보를 불러오는데 성공했습니다.", response).to_dict()
+        response = db.table(table_name).select("*").eq("id", id).single().execute()
+        return response
     except Exception as e:
-        return Response(False, "DB에 정보를 불러오는데 실패했습니다.").to_dict()
+        raise HTTPException(status_code=400, detail=f"데이터를 읽어오는데 실패했습니다. {str(e)}")

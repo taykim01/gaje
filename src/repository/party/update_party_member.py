@@ -1,41 +1,43 @@
-from typing import List
-from fastapi import APIRouter
-from api.v1 import read, update
-from repository.party.party import TimeSlot
-from response import Response
+import json
+from fastapi import APIRouter, HTTPException
+from src.api.v1.read import read
+from src.api.v1.update import update
+from src.repository.party.party import Party
 
 router = APIRouter()
 
-@router.get("/read-party", response_model=Response)
-async def update_party_member(party_id: str, user_name: str, available_time: List[TimeSlot]) -> Response:
+@router.post("/update-party-member")
+def update_party_member(party_id: str, user_name: str, available_slots):
     try:
-        response = await read("party", party_id)
-        if not response.success:
-            return Response(False, "파티 정보 읽기에 실패했습니다.", response.data)
-        
-        party_data = response.data
-        date_list = party_data['date_list']
+        response = read("PARTY", party_id).model_dump_json()
+        response = json.loads(response)
+        data = response["data"]
+        party_data = Party(
+            id=str(data["id"]),
+            created_at=data["created_at"],
+            name=data["name"],
+            date_list=data["date_list"],
+        )
+        date_list = party_data.date_list
+
+        available_slots = json.loads(available_slots)
 
         user_available_time = []
-        for time in available_time:
-            date = time.date
-            time_slot = next((slot for slot in date_list if slot['date'] == date), None)
-            if not time_slot:
-                return Response(False, "해당 날짜의 TimeSlot을 찾을 수 없습니다.", {})
-            time_slot['users'].append(user_name)
-            user_available_time.append(time_slot)
+        for slot in available_slots:
+            for date in date_list:
+                if slot["date"] == date.date:
+                    if slot["time"] == date.time:
+                        if user_name not in date.users:
+                            date.users.append(user_name)
+                        if user_name in date.unavailable:
+                            date.unavailable.remove(user_name)
+                user_available_time.append(date)
 
-        update_payload = {
-            'partyID': party_id,
-            'partyData': {
-                'userAvailableTime': user_available_time
-            }
-        }
+        update_payload = {"date_list": user_available_time}
+        response = update("PARTY", party_id, update_payload)
 
-        response = await update("party", party_id, update_payload)
-        if not response.success:
-            return Response(False, "파티 정보 업데이트에 실패했습니다.", response.data)
-        
-        return Response(True, "파티 정보 업데이트에 성공했습니다.")
+        return {"success": True, "message": "파티 멤버 업데이트에 성공했습니다."}
     except Exception as e:
-        return Response(False, "파티 정보 업데이트에 실패했습니다.", str(e))
+        raise HTTPException(
+            status_code=400, detail=f"파티 정보 업데이트에 실패했습니다. {str(e)}"
+        )

@@ -1,10 +1,15 @@
-from src.service.supabase import db
-from src.response import Response
+from fastapi import HTTPException
+from fastapi.encoders import jsonable_encoder
+from src.service.supabase.db import db
 
 
-async def create(table_name: str, data: dict) -> Response:
+def create(table_name, data):
     try:
-        await db.table(table_name).insert(data).execute()
-        return Response(True, "DB에 정보를 저장하는데 성공했습니다.").to_dict()
+        data = jsonable_encoder(data, exclude_unset=True)
+        db.table(table_name).insert(data).execute()
+        return {
+            "success": True,
+            "message": "데이터 생성에 성공했습니다."
+        }
     except Exception as e:
-        return Response(False, "DB에 정보를 등록하는데 실패했습니다.").to_dict()
+        raise HTTPException(status_code=400, detail=f"데이터 생성에 실패했습니다. {str(e)}")
