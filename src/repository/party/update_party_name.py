@@ -1,6 +1,5 @@
 from fastapi import APIRouter, HTTPException
 from src.api.v1.update import update
-from src.response import Response
 
 router = APIRouter()
 

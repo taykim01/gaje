@@ -1,9 +1,8 @@
 from fastapi import HTTPException
 from src.service.supabase.db import db
-from src.response import Response
 
 
-def read(table_name: str, id: int) -> Response:
+def read(table_name: str, id: int):
     try:
         response = db.table(table_name).select("*").eq("id", id).single().execute()
         return response
