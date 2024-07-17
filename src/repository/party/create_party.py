@@ -2,7 +2,7 @@ from datetime import datetime
 from fastapi import APIRouter, HTTPException
 from src.repository.party.party import Party
 from src.api.v1.create import create
-from util import get_dates_in_range
+from src.util import get_dates_in_range
 
 router = APIRouter()
 
