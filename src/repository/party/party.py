@@ -10,7 +10,7 @@ class TimeSlot(BaseModel):
 
 class Party(BaseModel):
     id: Optional[str] = None
-    created_at: datetime = None
+    created_at: datetime = datetime.now()
     name: str
     date_list: List[TimeSlot] = []
     

@@ -1,7 +1,9 @@
 from datetime import datetime, timedelta
 from typing import List
 from src.repository.party.party import TimeSlot
-from src.util import format_date, time_segments
+from src.util.format_date import format_date
+from src.util.time_segments import time_segments
+
 
 
 def get_dates_in_range(start_date: str, end_date: str) -> List[TimeSlot]:
